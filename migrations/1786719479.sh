@@ -13,6 +13,7 @@ fi
 config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 state_home="${XDG_STATE_HOME:-$HOME/.local/state}"
 systemd_dir="${OMARCHY_SYSTEMD_DIR:-/etc/systemd/system}"
+sleep_config_dir="${OMARCHY_SLEEP_CONFIG_DIR:-/etc/systemd/sleep.conf.d}"
 reboot_required=0
 
 config_source="$OMARCHY_PATH/default/wireplumber/wireplumber.conf.d/51-macbook-cs4208-softvol.conf"
@@ -33,6 +34,12 @@ fi
 if ! systemctl is-enabled --quiet omarchy-cs4208-audio.service; then
   sudo systemctl enable omarchy-cs4208-audio.service
   reboot_required=1
+fi
+
+sleep_config_source="$OMARCHY_PATH/install/hardware/apple/60-cs4208-s2idle.conf"
+sleep_config_target="$sleep_config_dir/60-cs4208-s2idle.conf"
+if ! cmp -s "$sleep_config_source" "$sleep_config_target"; then
+  sudo install -Dm644 "$sleep_config_source" "$sleep_config_target"
 fi
 
 driver_installed=0

@@ -12,6 +12,7 @@ other_packages="$ROOT/install/omarchy-other.packages"
 migration="$ROOT/migrations/1786719479.sh"
 soft_mixer="$ROOT/default/wireplumber/wireplumber.conf.d/51-macbook-cs4208-softvol.conf"
 mixer_service="$ROOT/install/hardware/apple/omarchy-cs4208-audio.service"
+sleep_config="$ROOT/install/hardware/apple/60-cs4208-s2idle.conf"
 
 grep -q 'apple/fix-cs4208-audio.sh' "$all" ||
   fail "the CS4208 audio fix runs during hardware setup"
@@ -28,6 +29,10 @@ grep -Fq 'amixer -c0 sset Master 100%% unmute' "$mixer_service" ||
   fail "the boot service pins the CS4208 hardware mixer at full scale"
 grep -Fq 'alsactl store 0' "$mixer_service" ||
   fail "the boot service persists the CS4208 hardware mixer"
+if ! grep -Fxq 'SuspendState=mem' "$sleep_config" ||
+  ! grep -Fxq 'MemorySleepMode=s2idle' "$sleep_config"; then
+  fail "the CS4208 suspend override selects s2idle"
+fi
 pass "the complete CS4208 audio fix is wired into setup"
 
 test_tmp=$(mktemp -d)
@@ -103,11 +108,13 @@ chmod +x "$stub_bin"/*
 run_leaf() {
   local model="$1"
   local systemd_dir="$test_tmp/leaf-systemd-$model"
+  local sleep_config_dir="$test_tmp/leaf-sleep-$model"
   : >"$calls"
   PATH="$stub_bin:$PATH" TEST_LOG="$calls" \
     OMARCHY_INSTALL="$ROOT/install" \
     OMARCHY_MACBOOK12_AUDIO_MODEL="$model" \
     OMARCHY_SYSTEMD_DIR="$systemd_dir" \
+    OMARCHY_SLEEP_CONFIG_DIR="$sleep_config_dir" \
     bash -eE -o pipefail -c 'source "$1"' bash "$leaf"
 }
 
@@ -118,6 +125,8 @@ grep -Fq $'systemctl\tenable\tomarchy-cs4208-audio.service' "$calls" ||
   fail "a 2017 12-inch MacBook enables the hardware mixer service" "$(cat "$calls")"
 [[ -f $test_tmp/leaf-systemd-MacBook10,1/omarchy-cs4208-audio.service ]] ||
   fail "hardware setup installs the CS4208 mixer service"
+[[ -f $test_tmp/leaf-sleep-MacBook10,1/60-cs4208-s2idle.conf ]] ||
+  fail "hardware setup selects s2idle for reliable speaker resume"
 pass "a 2017 12-inch MacBook gets the complete system audio setup"
 
 run_leaf "MacBook9,1" >/dev/null
@@ -128,6 +137,8 @@ pass "a 2016 12-inch MacBook gets the CS4208 driver"
 for model in "MacBook8,1" "MacBookPro14,1" "XPS 13 9310"; do
   run_leaf "$model" >/dev/null
   [[ ! -s $calls ]] || fail "$model is left alone" "$(cat "$calls")"
+  [[ ! -e $test_tmp/leaf-sleep-$model ]] ||
+    fail "$model does not get the CS4208 suspend override"
 done
 pass "unsupported and non-Apple hardware is left alone"
 
@@ -162,12 +173,13 @@ run_migration() {
   local service_enabled="${5:-0}"
   local run_dir="$test_tmp/migration-$name"
 
-  mkdir -p "$run_dir/home" "$run_dir/systemd"
+  mkdir -p "$run_dir/home" "$run_dir/systemd" "$run_dir/sleep"
   : >"$calls"
   PATH="$stub_bin:$PATH" TEST_LOG="$calls" HOME="$run_dir/home" \
     XDG_CONFIG_HOME="$run_dir/home/.config" \
     XDG_STATE_HOME="$run_dir/home/.local/state" \
     OMARCHY_PATH="$ROOT" OMARCHY_SYSTEMD_DIR="$run_dir/systemd" \
+    OMARCHY_SLEEP_CONFIG_DIR="$run_dir/sleep" \
     OMARCHY_MACBOOK12_AUDIO_MODEL="$model" \
     CS4208_PKG_PRESENT="$package_present" \
     CS4208_DKMS_INSTALLED="$driver_installed" \
@@ -186,6 +198,8 @@ grep -Fq $'omarchy-state\tset\treboot-required' "$calls" ||
   fail "the migration installs the user software mixer"
 [[ -f $last_migration_dir/systemd/omarchy-cs4208-audio.service ]] ||
   fail "the migration installs the hardware mixer service"
+[[ -f $last_migration_dir/sleep/60-cs4208-s2idle.conf ]] ||
+  fail "the migration selects s2idle for reliable speaker resume"
 pass "the migration installs the complete CS4208 audio setup"
 
 run_migration "macbook9" "MacBook9,1" 0 0 0
@@ -216,6 +230,7 @@ PATH="$stub_bin:$PATH" TEST_LOG="$calls" HOME="$last_migration_dir/home" \
   XDG_CONFIG_HOME="$last_migration_dir/home/.config" \
   XDG_STATE_HOME="$last_migration_dir/home/.local/state" \
   OMARCHY_PATH="$ROOT" OMARCHY_SYSTEMD_DIR="$last_migration_dir/systemd" \
+  OMARCHY_SLEEP_CONFIG_DIR="$last_migration_dir/sleep" \
   OMARCHY_MACBOOK12_AUDIO_MODEL="MacBook10,1" \
   CS4208_PKG_PRESENT=1 CS4208_DKMS_INSTALLED=1 CS4208_SERVICE_ENABLED=1 \
   bash -euo pipefail "$migration" >/dev/null

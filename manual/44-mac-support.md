@@ -39,6 +39,8 @@ The installer detects Mac hardware and applies the needed fixes automatically: B
 
 On those 12-inch MacBooks, Omarchy also enables software volume for the internal speakers and keeps the codec's hardware mixer at full scale, since that speaker path has no usable hardware volume control.
 
+The CS4208 speaker amplifier does not recover after deep S3 suspend, even when the codec is fully reinitialized. Omarchy therefore uses suspend-to-idle on these two models so audio keeps working after resume. This consumes more battery while suspended than deep S3.
+
 ### Known Limitations
 
 Members of the community are constantly working on solutions to these challenges so if these are problematic for you, join #omarchy-on-other in our [Discord](https://discord.gg/tXFUdasqhY) and see if there's any up-to-date methods for resolving these.

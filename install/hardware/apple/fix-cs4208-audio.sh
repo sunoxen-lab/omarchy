@@ -12,6 +12,11 @@ if [[ $product_name == "MacBook9,1" || $product_name == "MacBook10,1" ]]; then
 
   omarchy-pkg-add macbook12-audio-driver-dkms
 
+  sleep_config_dir="${OMARCHY_SLEEP_CONFIG_DIR:-/etc/systemd/sleep.conf.d}"
+  install -Dm644 \
+    "$OMARCHY_INSTALL/hardware/apple/60-cs4208-s2idle.conf" \
+    "$sleep_config_dir/60-cs4208-s2idle.conf"
+
   systemd_dir="${OMARCHY_SYSTEMD_DIR:-/etc/systemd/system}"
   install -Dm644 \
     "$OMARCHY_INSTALL/hardware/apple/omarchy-cs4208-audio.service" \
