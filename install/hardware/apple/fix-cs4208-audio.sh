@@ -11,4 +11,11 @@ if [[ $product_name == "MacBook9,1" || $product_name == "MacBook10,1" ]]; then
   echo "Detected 12-inch MacBook with CS4208 audio"
 
   omarchy-pkg-add macbook12-audio-driver-dkms
+
+  systemd_dir="${OMARCHY_SYSTEMD_DIR:-/etc/systemd/system}"
+  install -Dm644 \
+    "$OMARCHY_INSTALL/hardware/apple/omarchy-cs4208-audio.service" \
+    "$systemd_dir/omarchy-cs4208-audio.service"
+  systemctl daemon-reload
+  systemctl enable omarchy-cs4208-audio.service
 fi

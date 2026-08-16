@@ -37,6 +37,8 @@ It is necessary to disable Apple's Secure Boot in order to boot the bootable USB
 
 The installer detects Mac hardware and applies the needed fixes automatically: Broadcom Wi-Fi drivers and firmware, the SPI keyboard driver on the MacBook models that need it, an NVMe suspend fix for those same models, and the CS4208 speaker driver on the 12-inch MacBook (2016 and 2017).
 
+On those 12-inch MacBooks, Omarchy also enables software volume for the internal speakers and keeps the codec's hardware mixer at full scale, since that speaker path has no usable hardware volume control.
+
 ### Known Limitations
 
 Members of the community are constantly working on solutions to these challenges so if these are problematic for you, join #omarchy-on-other in our [Discord](https://discord.gg/tXFUdasqhY) and see if there's any up-to-date methods for resolving these.
