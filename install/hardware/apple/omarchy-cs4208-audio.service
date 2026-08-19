@@ -5,6 +5,8 @@ After=sound.target
 [Service]
 Type=oneshot
 ExecStart=/usr/bin/amixer -c0 sset Master 100%% unmute
+ExecStart=/usr/bin/amixer -c0 sset Capture 100%% unmute cap
+ExecStart=/usr/bin/amixer -c0 sset "Internal Mic Boost" 1
 ExecStart=/usr/bin/alsactl store 0
 
 [Install]

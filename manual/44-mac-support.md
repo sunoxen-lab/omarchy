@@ -37,7 +37,7 @@ It is necessary to disable Apple's Secure Boot in order to boot the bootable USB
 
 The installer detects Mac hardware and applies the needed fixes automatically: Broadcom Wi-Fi drivers and firmware, the SPI keyboard driver on the MacBook models that need it, an NVMe suspend fix for those same models, and the CS4208 speaker driver on the 12-inch MacBook (2016 and 2017).
 
-On those 12-inch MacBooks, Omarchy also enables software volume for the internal speakers and keeps the codec's hardware mixer at full scale, since that speaker path has no usable hardware volume control.
+On those 12-inch MacBooks, Omarchy also enables software volume for the internal speakers and keeps the codec's hardware mixer at full scale, since that speaker path has no usable hardware volume control. The capture side is pinned the same way: reinitializing the codec resets every mixer control to muted, and with software volume in charge a muted hardware capture control silently kills the internal microphone.
 
 The CS4208 speaker amplifier does not recover after deep S3 suspend, even when the codec is fully reinitialized. Omarchy therefore uses suspend-to-idle on these two models so audio keeps working after resume. This consumes more battery while suspended than deep S3.
 
